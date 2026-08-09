@@ -5,6 +5,7 @@ from auto_apply.db_updater import consume_approval_token, create_approval_token,
 
 def test_application_state_machine_and_one_time_approval_token():
     conn = sqlite3.connect(":memory:")
+    conn.execute("CREATE TABLE job_descriptions (job_id TEXT PRIMARY KEY, passes_filter INTEGER DEFAULT 1)")
     migrate_db(conn)
     set_application_state(conn, "job-1", "pending", "queued")
     token = create_approval_token(conn, "job-1")
