@@ -1,134 +1,101 @@
-"""
-auto_apply/config.py — Candidate Profile & Auto-Apply Configuration
+"""JobSense auto-apply configuration.
 
-Edit the CANDIDATE dict below with your personal details before running.
-Set dry_run = False only when you are ready to actually submit applications.
+Sensitive candidate data is loaded from environment variables and must not be
+committed to source control.
 """
-
 import os
 from dotenv import load_dotenv
 
-# Load .env from the project root (same folder as career_watcher.py)
-_env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
-load_dotenv(_env_path)
+PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
+load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
 
-# ─── CANDIDATE PERSONAL DETAILS ───────────────────────────────────────────────
-# Fill in your correct personal details here before running.
+
+def _env(name: str, default: str = "") -> str:
+    return os.environ.get(name, default).strip()
+
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    return _env(name, "true" if default else "false").lower() in {"1", "true", "yes", "on"}
+
 
 CANDIDATE = {
-    # ── Identity
-    "full_name": "Yash Prakash",
-    "first_name": "Yash",
-    "last_name": "Prakash",
-    "email": "Yashpra222@gmail.com",
-    "phone": "+91-7007385969",
-
-    # ── Location
-    "city": "Noida",
-    "state": "Uttar Pradesh",
-    "country": "India",
-    "postal_code": "201301",
-
-    # ── Experience
-    "years_experience": "1",         # Software Engineer @ Samsung Research India (Feb 2025 – Present)
-    "current_company": "Samsung Research India",
-    "current_title": "Software Engineer — AI Systems & Agentic AI",
-    "highest_degree": "Bachelor of Technology",
-    "field_of_study": "Computer Science & Engineering",
-    "university": "DIT University, Dehradun",
-    "graduation_year": "2024",
-
-    # ── Online Profiles
-    "linkedin": "https://linkedin.com/in/yash0prakash",
-    "github": "",                    # GitHub link was not a full URL in resume — leave blank or fill manually
-    "portfolio": "",
-
-    # ── Resume PDF
-    "resume_pdf_path": r"C:\Users\yashp\Downloads\Resume.pdf",
-
-    # ── Application Preferences
-    "willing_to_relocate": True,
-    "visa_sponsorship_needed": False,
-    "us_authorized": False,
-    "authorized_to_work": True,
-
-    # ── Screening question answers (sourced directly from resume)
-    "why_this_company": (
-        "I am a Software Engineer at Samsung Research India specializing in Agentic AI, "
-        "LLMs, and RAG systems. I am passionate about building production-grade autonomous "
-        "AI agents and believe this role aligns perfectly with my expertise in multi-agent "
-        "architectures, LLM-driven automation, and scalable backend AI services."
-    ),
-    "greatest_strength": (
-        "My deepest strength is building end-to-end production AI systems — from designing "
-        "planner-executor agent architectures and RAG pipelines to integrating VLMs for "
-        "UI understanding. I have delivered these at Samsung Research India and been "
-        "recognized with a Quarterly Employee Award and shortlisted for Samsung Best "
-        "Research Paper 2026 for FLEX-MAS."
-    ),
-    "summary": (
-        "Software Engineer at Samsung Research India specializing in Agentic AI, LLMs, "
-        "RAG, and Android Automation. Experienced in building production AI systems using "
-        "multi-agent architectures, VLMs, backend services, and enterprise AI workflows."
-    ),
-    "salary_expectation": "",
+    "full_name": _env("CANDIDATE_FULL_NAME"),
+    "first_name": _env("CANDIDATE_FIRST_NAME"),
+    "last_name": _env("CANDIDATE_LAST_NAME"),
+    "email": _env("CANDIDATE_EMAIL"),
+    "phone": _env("CANDIDATE_PHONE"),
+    "city": _env("CANDIDATE_CITY", "Noida"),
+    "state": _env("CANDIDATE_STATE", "Uttar Pradesh"),
+    "country": _env("CANDIDATE_COUNTRY", "India"),
+    "postal_code": _env("CANDIDATE_POSTAL_CODE"),
+    "years_experience": _env("CANDIDATE_YEARS_EXPERIENCE", "0"),
+    "current_company": _env("CANDIDATE_CURRENT_COMPANY"),
+    "current_title": _env("CANDIDATE_CURRENT_TITLE"),
+    "highest_degree": _env("CANDIDATE_HIGHEST_DEGREE", "Bachelor of Technology"),
+    "field_of_study": _env("CANDIDATE_FIELD_OF_STUDY", "Computer Science & Engineering"),
+    "university": _env("CANDIDATE_UNIVERSITY"),
+    "graduation_year": _env("CANDIDATE_GRADUATION_YEAR"),
+    "linkedin": _env("CANDIDATE_LINKEDIN"),
+    "github": _env("CANDIDATE_GITHUB"),
+    "portfolio": _env("CANDIDATE_PORTFOLIO"),
+    "resume_pdf_path": _env("RESUME_PDF_PATH"),
+    "willing_to_relocate": _env_bool("CANDIDATE_WILLING_TO_RELOCATE", True),
+    "visa_sponsorship_needed": _env_bool("CANDIDATE_VISA_SPONSORSHIP_NEEDED", False),
+    "us_authorized": _env_bool("CANDIDATE_US_AUTHORIZED", False),
+    "authorized_to_work": _env_bool("CANDIDATE_AUTHORIZED_TO_WORK", True),
+    "why_this_company": _env("CANDIDATE_WHY_THIS_COMPANY"),
+    "greatest_strength": _env("CANDIDATE_GREATEST_STRENGTH"),
+    "summary": _env("CANDIDATE_SUMMARY"),
+    "salary_expectation": _env("CANDIDATE_SALARY_EXPECTATION"),
 }
 
-# ─── AUTO-APPLY ENGINE SETTINGS ───────────────────────────────────────────────
+APPLY_SCORE_THRESHOLD = float(_env("APPLY_SCORE_THRESHOLD", "60.0"))
+MAX_JOBS_PER_RUN = int(_env("MAX_JOBS_PER_RUN", "5"))
+DRY_RUN = _env_bool("DRY_RUN", True)
+HEADLESS = _env_bool("HEADLESS", False)
+LIVE_APPLY_ENABLED = _env_bool("JOBSENSE_LIVE_APPLY", False)
 
-# Minimum LLM match score (0–100) to consider a job for auto-apply
-APPLY_SCORE_THRESHOLD = float(os.environ.get("APPLY_SCORE_THRESHOLD", "60.0"))
+DB_PATH = os.path.join(PROJECT_ROOT, "seen_jobs.db")
+RESUME_TXT_PATH = os.path.join(PROJECT_ROOT, "resume.txt")
 
-# Maximum number of job applications to attempt per run
-MAX_JOBS_PER_RUN = int(os.environ.get("MAX_JOBS_PER_RUN", "5"))
-
-# Production Mode: DRY_RUN=False actually submits applications live.
-DRY_RUN = os.environ.get("DRY_RUN", "false").lower() in ("true", "1")
-
-# Browser visibility (headless=True runs in background silently, headless=False opens visible browser on screen)
-HEADLESS = os.environ.get("HEADLESS", "false").lower() in ("true", "1")
-
-# ─── DATABASE & PATH CONFIG ───────────────────────────────────────────────────
-
-# Path to the JobSense SQLite database (relative to project root)
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "seen_jobs.db")
-
-# resume.txt (skills/profile YAML — used as LLM context for screening questions)
-RESUME_TXT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "resume.txt")
-
-# ─── LLM PROVIDER & MODEL CONFIG ─────────────────────────────────────────────
-# Options: "nvidia" or "ollama"
-LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "ollama")
-
-# NVIDIA API Settings
+LLM_PROVIDER = _env("LLM_PROVIDER", "ollama")
 NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
-NVIDIA_MODEL    = os.environ.get("NVIDIA_MODEL", "meta/llama-3.1-70b-instruct")
-NVIDIA_API_KEY  = os.environ.get("NVIDIA_API_KEY", "")
-
-# Ollama Local Settings
-OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
-OLLAMA_MODEL    = os.environ.get("OLLAMA_MODEL", "gpt-oss:120b-cloud")
-
-# ─── SUPPORTED PORTAL TYPES ───────────────────────────────────────────────────
-# Maps URL pattern -> portal name (used in task prompt construction)
+NVIDIA_MODEL = _env("NVIDIA_MODEL", "meta/llama-3.1-70b-instruct")
+NVIDIA_API_KEY = _env("NVIDIA_API_KEY")
+OLLAMA_BASE_URL = _env("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+OLLAMA_MODEL = _env("OLLAMA_MODEL", "gpt-oss:120b-cloud")
 
 PORTAL_PATTERNS = {
-    "greenhouse.io":           "Greenhouse",
-    "boards.greenhouse.io":    "Greenhouse",
-    "job-boards.greenhouse.io":"Greenhouse",
-    "lever.co":                "Lever",
-    "jobs.ashbyhq.com":        "Ashby",
-    "app.ashbyhq.com":         "Ashby",
-    "myworkdayjobs.com":       "Workday",
-    "wd1.myworkdayjobs.com":   "Workday",
-    "wd5.myworkdayjobs.com":   "Workday",
-    "oraclecloud.com":         "Oracle HCM",
+    "greenhouse.io": "Greenhouse",
+    "boards.greenhouse.io": "Greenhouse",
+    "job-boards.greenhouse.io": "Greenhouse",
+    "lever.co": "Lever",
+    "jobs.ashbyhq.com": "Ashby",
+    "app.ashbyhq.com": "Ashby",
+    "myworkdayjobs.com": "Workday",
+    "wd1.myworkdayjobs.com": "Workday",
+    "wd5.myworkdayjobs.com": "Workday",
+    "oraclecloud.com": "Oracle HCM",
 }
 
+
 def detect_portal(url: str) -> str:
-    """Detect job portal type from URL."""
-    url_lower = url.lower()
+    url_lower = (url or "").lower()
     for pattern, portal in PORTAL_PATTERNS.items():
         if pattern in url_lower:
             return portal
     return "Unknown"
+
+
+def validate_candidate_profile(require_resume: bool = False) -> None:
+    required = ["full_name", "first_name", "last_name", "email", "phone"]
+    missing = [key for key in required if not CANDIDATE.get(key)]
+    if require_resume and not CANDIDATE.get("resume_pdf_path"):
+        missing.append("resume_pdf_path")
+    if missing:
+        raise RuntimeError("Missing candidate configuration: " + ", ".join(missing) + ". Put these values in .env.")
+
+
+def assert_live_apply_enabled() -> None:
+    if not LIVE_APPLY_ENABLED:
+        raise RuntimeError("Live auto-apply is disabled. Set JOBSENSE_LIVE_APPLY=true in private .env after review.")

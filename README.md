@@ -1,229 +1,183 @@
-# JobSense 🎯
+# JobSense
 
-> **Automated job discovery powered by LLM resume matching** — watches 1,500+ company career pages, fetches full job descriptions, and ranks every listing against your resume using NVIDIA's Nemotron LLM.
-
----
-
-## What It Does
-
-JobSense is a self-hosted job intelligence system that runs 24/7 and surfaces only the roles that **actually match your background**. It's not a keyword alert — it reads the full job description, scores it against your resume, and tells you *why* it's a good or bad fit.
-
-- 🔍 **Scrapes 1,500+ companies** across Workday, Greenhouse, Lever, Ashby, Oracle HCM, and custom career portals every 5 hours
-- 📄 **Fetches full job descriptions** via platform-specific APIs (Workday CXS, Greenhouse Board API, Lever API, Ashby GraphQL)
-- 🤖 **LLM resume matching** — NVIDIA Nemotron scores each JD 0–100% against your `resume.txt`
-- 🧹 **Hard pre-filters** — eliminates senior/staff/lead roles, wrong domains, and 3+ YOE requirements before the LLM ever sees them
-- 📊 **Live dashboard** at `localhost:5000` — filter, sort, and browse every match with score breakdowns
-- 📬 **Email alerts** — real-time email when new jobs clear filters, plus a daily digest
-- 🗃️ **SQLite-backed deduplication** — never re-alerted on a job you've already seen
-
----
+> Self-hosted job intelligence: ATS discovery, JD extraction, evidence-based resume matching, and a guarded auto-apply workflow.
 
 ## Architecture
 
-```
-career_watcher.py          — Scrapes 1,500+ career pages on a 5h cycle
-       │
-       ├── detect_ats(url) — Routes to the right API backend
-       │     ├── Workday CXS API    (with session/CSRF cookie support)
-       │     ├── Greenhouse Board API
-       │     ├── Lever API
-       │     ├── Ashby GraphQL
-       │     ├── Oracle HCM REST
-       │     └── Playwright headless Chromium (fallback)
-       │
-       ▼
-jd_fetcher.py              — Fetches full JD text per job (parallel, 15 workers)
-       │
-       ▼
-llm_evaluator.py           — Pre-filters by title/YOE, then scores with NVIDIA Nemotron
-       │
-       ├── seen_jobs.db    — SQLite: deduplication + job details + JD text + scores
-       │
-       ▼
-dashboard.py               — Flask live dashboard (localhost:5000)
-send_db_email.py           — Sends HTML email digest of top matches
+```text
+career_watcher.py
+      |
+      +--> ATS discovery (Workday / Greenhouse / Lever / Ashby / Oracle / fallback)
+      |
+      v
+job details + full JD
+      |
+      v
+llm_evaluator.py
+  +-- deterministic eligibility
+  +-- structured required/preferred skill evidence
+  +-- weighted candidate score
+  +-- optional LLM evidence review
+      |
+      v
+SQLite
+  +-- legacy watcher tables
+  +-- normalized jobs/evaluations
+  +-- application state machine + audit metadata
+      |
+      +--> secure local dashboard
+      |
+      +--> dry-run auto-apply
+      |
+      +--> CLI-only live submission (explicit opt-in)
 ```
 
----
+## Security model
+
+The dashboard is **localhost-only** and requires a password. All state-changing
+requests use Flask-WTF CSRF protection. The web UI can launch only a dry-run
+application flow; real submission is intentionally CLI-only and requires
+`JOBSENSE_LIVE_APPLY=true` in the private `.env`.
+
+Candidate contact details, resume path, screening answers, and credentials are
+loaded from environment variables and are not stored in Python source.
 
 ## Setup
 
-### 1. Clone & Install
+### 1. Install
 
 ```bash
-git clone https://github.com/sahilobhrai/JobSense.git
+git clone https://github.com/yashpra22/JobSense.git
 cd JobSense
-```
-
-```bash
-pip install playwright beautifulsoup4 playwright-stealth requests flask openai
+python -m pip install -r requirements.txt
 playwright install chromium
 ```
 
-### 2. Configure Environment Variables
-
-Copy `.env.example` to `.env` and fill in your keys:
+### 2. Configure private data
 
 ```bash
 cp .env.example .env
 ```
 
-```bash
-# NVIDIA Nemotron LLM (for resume matching & auto-apply)
-NVIDIA_API_KEY="nvapi-xxxxxxxxxxxxxxxxxxxx"
+Fill the candidate fields and API credentials in `.env`. **Never commit `.env`.**
 
-# Optional Email alerts
-EMAIL_FROM="you@gmail.com"
-EMAIL_TO="you@gmail.com"
-SMTP_USER="you@gmail.com"
-SMTP_PASS="your-16-char-app-password"   # Gmail App Password
+For the dashboard, set:
+
+```text
+DASHBOARD_PASSWORD=<strong-local-password>
+DASHBOARD_SECRET_KEY=<random-long-secret>
 ```
 
-**Getting a Gmail App Password:**
-1. Enable 2-Step Verification on your Google account
-2. Go to https://myaccount.google.com/apppasswords
-3. Generate an App Password named "JobSense"
+### 3. Add resume
 
-**Getting an NVIDIA API Key:**
-1. Sign up at https://build.nvidia.com
-2. Generate an API key — free tier includes generous credits
+Keep a sanitized skill/profile document in `resume.txt`. Keep the actual PDF
+resume local and set `RESUME_PDF_PATH` in `.env`.
 
-### 3. Add Your Resume
+### 4. Run
 
-Replace `resume.txt` with your actual resume (plain text). This is what the LLM uses to score each job — the more detailed it is, the better the matches.
-
-### 4. Run the Watcher
+Watcher:
 
 ```bash
 python career_watcher.py
 ```
 
-This starts the main scraping loop. Every 5 hours it visits all 1,500+ company career pages, finds new jobs, fetches their full descriptions, and evaluates them against your resume.
-
-### 5. Run the Dashboard
-
-In a separate terminal:
+Dashboard:
 
 ```bash
 python dashboard.py
 ```
 
-Open `http://localhost:5000` to see all discovered jobs with match scores, sortable and filterable.
+Open `http://127.0.0.1:5000`.
 
----
+### 5. Auto-apply safety
 
-## Key Files
-
-| File | Purpose |
-|---|---|
-| `career_watcher.py` | Main scraper — 1,500+ companies, ATS detection, deduplication, email alerts |
-| `jd_fetcher.py` | Fetches full job description text from Workday CXS, Greenhouse, Lever, Ashby APIs |
-| `llm_evaluator.py` | Pre-filter (title/YOE rules) + NVIDIA Nemotron LLM scoring against resume |
-| `dashboard.py` | Flask web dashboard with live job listings, scores, filters, and sorting |
-| `send_db_email.py` | HTML email digest of top-matched jobs |
-| `resume.txt` | Your resume — the source of truth for all LLM matching |
-| `seen_jobs.db` | SQLite database (auto-created, not committed to git) |
-
----
-
-## Configuration
-
-Edit the top of `career_watcher.py` to tune behaviour:
-
-```python
-CHECK_INTERVAL_MINUTES = 300   # Scrape cycle (default: every 5 hours)
-CONCURRENCY = 8                # Parallel pages fetched at once
-DAILY_DIGEST_HOUR = 8          # Send email digest at 8am local time
-VERIFY_URLS = True             # HTTP-verify each job URL before alerting
-DB_PATH = "seen_jobs.db"       # SQLite state file
-```
-
----
-
-## Filtering Logic
-
-JobSense uses a **3-layer filter pipeline** before scoring:
-
-### Layer 1 — Title Pre-filter (in `llm_evaluator.py`)
-Hard rules applied **before** the LLM (fast, deterministic):
-- ❌ Excludes roles requiring 3+ years of experience (regex on JD text)
-- ❌ Excludes senior/staff/lead/principal/architect titles
-- ❌ Excludes irrelevant domains: DevSecOps, Data Engineering, Integration Engineering, SAP, Salesforce, etc.
-- ✅ Passes entry-level, associate, junior, and general SWE roles
-
-### Layer 2 — LLM Evaluation (NVIDIA Nemotron)
-For jobs that pass Layer 1, the full JD text is sent to the LLM along with your resume:
-- Returns a **match score (0–100%)**
-- Returns a **match analysis** explaining the fit
-
-### Layer 3 — Dashboard Filter
-The live dashboard lets you additionally filter by:
-- Score threshold
-- Company
-- Location
-- Posting date
-- Sort by: score, company, date discovered, or last scraped
-
----
-
-## Supported ATS Platforms
-
-| Platform | Method | Companies |
-|---|---|---|
-| **Workday** | CXS JSON API (with session cookies for 403 bypass) | ~800+ |
-| **Greenhouse** | `boards-api.greenhouse.io` REST API | ~200+ |
-| **Lever** | `api.lever.co` REST API | ~100+ |
-| **Ashby** | GraphQL API | ~50+ |
-| **Oracle HCM** | REST API | ~50+ |
-| **Custom / Other** | Playwright headless Chromium + BeautifulSoup | Remaining |
-
----
-
-## Dashboard Features
-
-- **Live match scores** — 0–100% match against your resume, colour-coded
-- **Sort options** — by score, company A–Z, newest first, or identified last (scraping order)
-- **One-click apply** — direct link to the application page
-- **Match analysis** — LLM's explanation of why a job is or isn't a good fit
-- **No duplicates** — deduplication across all sources
-
----
-
-## Running Long-Term
-
-For unattended operation, use `tmux` or `screen`:
+Default behavior is dry-run:
 
 ```bash
-# Terminal 1 — watcher (scrapes every 5h)
-tmux new -s watcher
-python career_watcher.py
-
-# Terminal 2 — dashboard (always-on web UI)
-tmux new -s dashboard
-python dashboard.py
+python auto_apply/run_auto_apply.py --dry-run --max-jobs 1 --min-score 80
 ```
 
-On Linux, wrap in a `systemd` service for true background operation.
+Live submission is blocked unless you explicitly set:
 
----
+```text
+JOBSENSE_LIVE_APPLY=true
+DRY_RUN=false
+```
 
-## Stack
+Then run the CLI manually. The web dashboard never enables live submission.
 
-| Component | Technology |
-|---|---|
-| Scraping | Python `asyncio` + Playwright (headless Chromium) + `playwright-stealth` |
-| ATS APIs | `requests` (Workday CXS, Greenhouse, Lever, Ashby, Oracle HCM) |
-| HTML Parsing | BeautifulSoup4 |
-| LLM | NVIDIA Nemotron via `openai`-compatible API |
-| Storage | SQLite (`seen_jobs.db`) |
-| Dashboard | Flask + vanilla HTML/CSS/JS |
-| Email | Python `smtplib` (SMTP, HTML body) |
+## Matching pipeline
 
----
+The evaluator now uses four stages:
 
-## Notes
+1. **Eligibility:** role level, explicit location, timezone restrictions, experience requirements, and mandatory degree requirements.
+2. **Structured requirements:** required and preferred sections are separated before skill scoring.
+3. **Weighted deterministic score:** role alignment, required/preferred skills, and location contribute separately.
+4. **Evidence-based LLM review:** the LLM must return required-skill evidence and missing-required-skills instead of simply counting keywords.
 
-- **First run will be slow** — fetching 1,500+ career pages takes time. Subsequent cycles only process new/changed listings.
-- **seen_jobs.db is excluded from git** — your job history and personal data stay local.
-- **.env is excluded from git** — your API keys and email credentials are never committed.
-- **LLM costs** — NVIDIA's free tier is generous for personal use; the evaluator only sends jobs that pass the pre-filter to save credits.
+Location filtering deliberately avoids treating arbitrary two-letter strings such
+as `CA`, `OR`, or `GA` as geographic evidence.
+
+## Data model
+
+New normalized persistence is available under `storage/`:
+
+- `jobs.job_id` — canonical SHA-256 identity derived from ATS/source ID (URL fallback only).
+- `evaluations` — versioned evaluator/model results.
+- `applications` — explicit application state machine and audit metadata.
+
+Application states:
+
+```text
+pending -> approved -> filling -> submitted -> success
+                         |             |
+                         +-----------> uncertain
+                         +-----------> failed
+```
+
+`dry_run` and `skipped` are terminal audit states.
+
+## ATS architecture
+
+`ats/base.py` defines a normalized `ATSAdapter` contract and `ats/registry.py`
+provides adapter resolution. Existing discovery code can migrate to these
+adapters incrementally instead of keeping all ATS logic inside one module.
+
+## Quality
+
+CI runs on Python 3.11 and 3.12 and performs:
+
+- Python compilation checks
+- evaluator regression tests
+- canonical-ID/storage tests
+- application state-machine tests
+- pytest
+
+Run locally:
+
+```bash
+pytest -q
+python -m compileall -q .
+```
+
+## Repository structure
+
+```text
+JobSense/
+├── career_watcher.py       # existing discovery orchestrator
+├── jd_fetcher.py            # JD retrieval
+├── llm_evaluator.py         # eligibility + weighted/evidence evaluation
+├── dashboard.py             # authenticated localhost dashboard
+├── auto_apply/              # guarded browser application workflow
+├── ats/                     # normalized ATS adapter boundary
+├── evaluation/              # evaluation service boundary
+├── storage/                 # canonical IDs + normalized persistence
+├── tests/                   # regression and state-machine tests
+└── .github/workflows/ci.yml # CI
+```
+
+## Branching
+
+`main` remains the stable branch. Hardening work is developed on focused
+branches and merged through pull requests after CI passes. Configure GitHub
+branch protection to require the CI check and review before merging.
