@@ -42,9 +42,6 @@ application flow; real submission is intentionally CLI-only and requires
 Candidate contact details, resume path, screening answers, and credentials are
 loaded from environment variables and are not stored in Python source.
 
-Flask-WTF's global CSRF protection is used for AJAX state-changing requests,
-following its documented `X-CSRFToken` pattern. citeturn1search0
-
 ## Setup
 
 ### 1. Install
@@ -182,6 +179,5 @@ JobSense/
 ## Branching
 
 `main` remains the stable branch. Hardening work is developed on focused
-branches and merged through pull requests after CI passes. GitHub branch
-protection can require successful status checks before merge; protected branches
-support required checks and review requirements. citeturn0search2turn0search6
+branches and merged through pull requests after CI passes. Configure GitHub
+branch protection to require the CI check and review before merging.
