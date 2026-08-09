@@ -1,0 +1,273 @@
+candidate_profile:
+  role: Software Engineer / Software Development Engineer / AI Engineer
+
+  target_locations:
+    - India
+    - Bangalore
+    - Hyderabad
+    - Pune
+    - Chennai
+    - Delhi NCR
+    - Noida
+    - Gurgaon
+    - Mumbai
+    - Remote India
+    - Global Remote
+
+  experience_level:
+    min_years: 0
+    max_years: 3
+    preferred_levels:
+      - Entry Level
+      - Associate
+      - SDE-1 
+      - SDE-2
+      - SWE-1
+      - SWE-2
+      - L3
+      - IC1
+      - IC2
+
+  target_roles:
+    # Core Software Engineering
+    - Software Engineer
+    - Software Development Engineer
+    - Software Engineer I
+    - Software Engineer II
+    - Software Developer
+    - Associate Software Engineer
+    - Member of Technical Staff
+    - MTS-1
+    - MTS-2
+
+    # Backend
+    - Backend Engineer
+    - Backend Software Engineer
+    - Backend Developer
+    - Platform Backend Engineer
+    - API Engineer
+    - Server-side Engineer
+
+    # Full Stack
+    - Full Stack Engineer
+    - Full Stack Developer
+    - Software Engineer - Full Stack
+    - Web Engineer
+
+    # AI / ML
+    - AI Engineer
+    - Generative AI Engineer
+    - Applied AI Engineer
+    - Machine Learning Engineer
+    - ML Engineer
+    - AI Software Engineer
+    - LLM Engineer
+    - AI Platform Engineer
+    - AI Infrastructure Engineer
+    - Prompt Engineer
+    - AI Agent Engineer
+    - RAG Engineer
+
+    # QA Automation (Optional)
+    - Software Development Engineer in Test
+    - SDET
+    - Automation Engineer
+
+  preferred_domains:
+    - Artificial Intelligence
+    - Machine Learning
+    - Generative AI
+    - LLM Applications
+    - SaaS
+    - Cloud Computing
+    - Developer Tools
+    - Enterprise Software
+    - FinTech
+    - Cyber Security
+    - Infrastructure
+    - Platform Engineering
+    - Productivity Software
+
+  programming_languages:
+    - Python
+    - C++
+    - C
+    - JavaScript
+    - TypeScript
+    - Go
+    - Kotlin
+    - SQL
+    - Bash
+
+  ai_ml_skills:
+    - Machine Learning
+    - Deep Learning
+    - Generative AI
+    - Large Language Models
+    - AI Agents
+    - Prompt Engineering
+    - Retrieval Augmented Generation (RAG)
+    - Vector Databases
+    - Embeddings
+    - AI Evaluation
+    - AI Automation
+    - Fine Tuning
+    - MCP
+    - Function Calling
+    - Multi-Agent Systems
+
+  ai_frameworks:
+    - LangChain
+    - LangGraph
+    - LlamaIndex
+    - CrewAI
+    - AutoGen
+    - Semantic Kernel
+    - OpenAI API
+    - Anthropic API
+    - Google Gemini API
+    - Hugging Face
+    - Ollama
+    - vLLM
+    - FastAPI
+    - Gradio
+    - Streamlit
+
+  ml_frameworks:
+    - PyTorch
+    - TensorFlow
+    - Scikit-learn
+    - XGBoost
+    - Pandas
+    - NumPy
+    - OpenCV
+
+  backend_skills:
+    - REST APIs
+    - GraphQL
+    - gRPC
+    - Microservices
+    - Distributed Systems
+    - Event Driven Architecture
+    - Authentication
+    - OAuth
+    - JWT
+    - API Design
+
+  frontend_skills:
+    - React
+    - Next.js
+    - HTML
+    - CSS
+    - JavaScript
+    - TypeScript
+    - Tailwind CSS
+
+  cloud_platforms:
+    - AWS
+    - Azure
+    - Google Cloud Platform
+
+  cloud_services:
+    - EC2
+    - Lambda
+    - S3
+    - ECS
+    - EKS
+    - API Gateway
+    - CloudWatch
+    - Azure Functions
+    - Azure OpenAI
+    - Azure Storage
+    - Azure App Service
+    - Vertex AI
+
+  devops_tools:
+    - Docker
+    - Kubernetes
+    - Git
+    - GitHub
+    - GitHub Actions
+    - Jenkins
+    - Terraform
+    - CI/CD
+    - Linux
+    - Shell Scripting
+
+  databases:
+    - PostgreSQL
+    - MySQL
+    - MongoDB
+    - Redis
+    - Elasticsearch
+    - SQLite
+    - DynamoDB
+    - Pinecone
+    - Weaviate
+    - ChromaDB
+    - Milvus
+    - FAISS
+
+  software_engineering:
+    - Data Structures
+    - Algorithms
+    - Object-Oriented Programming
+    - Design Patterns
+    - Low Level Design
+    - High Level Design
+    - System Design
+    - Operating Systems
+    - Computer Networks
+    - Multithreading
+    - Concurrency
+    - Memory Management
+    - Distributed Systems
+    - Debugging
+    - Performance Optimization
+    - Software Architecture
+
+  keywords:
+    - SDE
+    - SWE
+    - Backend
+    - Full Stack
+    - AI Engineer
+    - ML Engineer
+    - LLM
+    - GenAI
+    - Platform Engineer
+    - Cloud
+    - Distributed Systems
+    - Python
+    - LangChain
+    - LangGraph
+    - AWS
+    - Azure
+    - FastAPI
+    - Docker
+    - Kubernetes
+    - REST API
+    - Microservices
+    - RAG
+    - AI Agents
+    - MCP
+    - Software Engineer
+    - Software Developer
+
+  exclude_roles:
+    - Staff Engineer
+    - Principal Engineer
+    - Engineering Manager
+    - Director
+    - Architect
+    - Product Manager
+    - Sales
+    - Marketing
+    - HR
+    - Recruiter
+    - Internship
+    - Intern
+    - Consultant
+    - SAP Consultant
+    - Business Analyst
+    - Technical Support

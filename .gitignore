@@ -1,0 +1,35 @@
+# Local state — the script's sqlite cache of seen jobs
+seen_jobs.db
+*.db-journal
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+
+# Local env files (API keys, credentials)
+.env
+.env.local
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# Dev/test scratch scripts and temp files
+scratch/
+
+# Temporary working files
+batch_2_working.json
+new_companies_broken.md
+new_companies_working.json
+workday_working.json
+verify_batch_2.py
+verify_new_companies.py
+merge_companies.py
+process_workday_list.py
+test_nvidia.py
